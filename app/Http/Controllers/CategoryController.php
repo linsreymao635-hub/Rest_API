@@ -1,73 +1,67 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use App\Models\Category;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    // GET /categories
     public function index()
     {
-        $categories = Category::all();
-        return view('categories.index', compact('categories'));
+        if (request()->expectsJson()) {
+            return response()->json(Category::all(), 200);
+        }
+        return view('categories.index', ['categories' => Category::all()]);
     }
 
-    // GET /categories/create
-    public function create()
-    {
-        return view('categories.create');
-    }
-
-    // POST /categories
     public function store(Request $request)
     {
-        $request->validate([
-            'name'        => 'required|string|max:255',
+        $validated = $request->validate([
+            'name'        => 'required|string',
             'description' => 'required|string',
+            'is_active'   => 'boolean',
         ]);
 
-        Category::create([
-            'name'        => $request->name,
-            'description' => $request->description,
-            'is_active'   => $request->has('is_active'),
-        ]);
+        $category = Category::create($validated);
 
-        return redirect()->route('categories.index')
-            ->with('success', 'Category created successfully.');
+        if (request()->expectsJson()) {
+            return response()->json($category, 201);
+        }
+        return redirect()->route('categories.index')->with('success', 'Category created successfully.');
     }
 
-    // GET /categories/{id}/edit
-    public function edit(Category $category)
+    public function show($id)
     {
-        return view('categories.edit', compact('category'));
+        $category = Category::findOrFail($id);
+        if (request()->expectsJson()) {
+            return response()->json($category, 200);
+        }
+        return view('categories.show', compact('category'));
     }
 
-    // PUT /categories/{id}
-    public function update(Request $request, Category $category)
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            'name'        => 'required|string|max:255',
+        $category = Category::findOrFail($id);
+        $validated = $request->validate([
+            'name'        => 'required|string',
             'description' => 'required|string',
+            'is_active'   => 'boolean',
         ]);
+        $category->update($validated);
 
-        $category->update([
-            'name'        => $request->name,
-            'description' => $request->description,
-            'is_active'   => $request->has('is_active'),
-        ]);
-
-        return redirect()->route('categories.index')
-            ->with('success', 'Category updated successfully.');
+        if (request()->expectsJson()) {
+            return response()->json($category, 200);
+        }
+        return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
     }
 
-    // DELETE /categories/{id}
-    public function destroy(Category $category)
+    public function destroy($id)
     {
-        $category->delete();
+        Category::findOrFail($id)->delete();
 
-        return redirect()->route('categories.index')
-            ->with('success', 'Category deleted successfully.');
+        if (request()->expectsJson()) {
+            return response()->json(['message' => 'Deleted successfully'], 200);
+        }
+        return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
     }
 }

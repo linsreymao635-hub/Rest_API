@@ -7,6 +7,5 @@ Route::get('/', function () {
     return redirect()->route('categories.index');
 });
 
-Route::resource('categories', CategoryController::class)->only([
-    'index', 'create', 'store', 'edit', 'update', 'destroy'
-]);
+Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+Route::get('/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
